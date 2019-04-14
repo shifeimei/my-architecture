@@ -1,0 +1,40 @@
+1 负载均衡
+  1.1 分类
+  * F5 硬件
+  * HaProxy
+  * LVS
+  * nginx
+  * apache
+  第7层负载均衡：nginx,apache。其中，nginx份额35%,主要流行在中，俄，非洲。apache流行在欧美。
+  apache使用select,nginx使用epoll机制。
+  第四层负载均衡：haproxy,lvs.  haproxy常用来做mysql的读写负载均衡。非web场景。和7层的比起来，无法实现动静分离；但能保持session.（7层正好相反）
+
+  1.2 cooke与session:
+  发散：http设计为无状态的原因：初期web都是静态页面的访问。现在无法满足有状态的需求。如登陆，购物车。
+  cooke与session:
+  cookie（客户端使用，不安全，只保存sessionid）,session(服务端使用,根据sessionid找到session)
+  sessionid一般都不一样。在多服务单独产生sessionid+nginx的场景，浏览器多次请求nginx时session依然无效
+  解决方案：
+  * 粘滞session(负载均衡时采用一致性hash算法，比如ip hash,根据hash环找地址，简单，缺点是重启后sesssion丢失，单点问题，热点问题)
+  * session复制（tomcat里进行配置即可，保证传输对象都序列化，使用同一个组播地址和端口的多个节点同属一个子集群，因此通过自定义组播地址和端口就可将一个大的tomcat集群分成多个子集群）
+  * shared session（redis等分布式缓存来管理session. 服务重启不会失去session,要改代码，适合大规模集群，消耗性能相对较大)
+     (springboot中，使用shared session方法:pom中spring-session-data-redis已封装好， @EnableRedisHttpSession开启. springboot通过注解，然后去访问redis拿session）
+
+  1.3 nginx怎么做高可用
+        keepalived 也就是vip(130.4) 【每个负载均衡器上都会有一个这个服务，大家竞争该ip资源，master角色】
+        lvs                   lvs 【这层可没有】
+  nginx(130.2) master   nginx(130.3) slave
+  keepalived:会在nginx-master故障时漂移到slave.  他的作用很简单，就是完成对nginx的心跳监测，挂的概率极低（低于nginx）。理论上所有keepalived挂了，服务才会完全挂掉。
+  原理：2个nginx上分别安装一个keepalived服务。keepalived服务启动后会竞争得到master角色，占用ip（10.3）资源。所以前端请求的是10.3,10.3转发给了它所在的nginx
+  服务。这2个keepalived服务分别检测各自所管理的nginx是否存活，如果master认为自己的nginx挂了，就广播告诉slave的keepalived，自己的ng挂了。其他的keepalived重新
+  竞争得到master角色，获得10.3ip。保证服务不挂。同时master keepalived平时也会给slave发布心跳，告诉他们自己还活着。
+  lvs其实和nginx比较类似，比较老，性能弱于nginx。
+  淘宝用的tengine是ng二次开发的，vip和keepalived类似，就是为了对nginx集群做主备漂移，保证服务可用的。
+
+  1.4 如何选（选型依赖于业务，杀鸡不用牛刀）
+  不能改代码，且不能序列化，比如别人给了个war要部署... 且要集群
+  小于7台：用复制
+  超过7台：session共享优先。redis本身也可能有坑，比如穿透？redis本身坏了。
+
+
+
