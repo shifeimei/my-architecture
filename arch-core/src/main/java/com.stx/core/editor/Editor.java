@@ -8,6 +8,10 @@ package com.stx.core.editor;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
+
 import javax.swing.*;
 import javax.swing.table.TableColumn;
 import javax.swing.text.*;
@@ -208,7 +212,63 @@ public class Editor extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        new Editor();
+    public static void main(String[] args) throws Exception{
+        final Object object = new Object();
+        URL uri = new URL("http://localhost:8080");
+        URLConnection connection = uri.openConnection();
+
+        //new Editor();
+        int b =0;
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                    synchronized (object) {
+                        object.notifyAll();
+                    }
+                }catch (Exception e){e.printStackTrace();}
+
+            }
+        });
+        t1.setName("t1");
+        t1.start();
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.out.println("t2 call t1 start");
+                    //t1.join();
+                    synchronized (object) {
+                        object.wait();
+                    }
+                    System.out.println("t2 call t1 finish");
+                } catch (Exception w) {
+                    w.printStackTrace();
+                }
+
+            }
+        });
+        t2.setName("t2");
+        t2.start();
+        Thread t3 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.out.println("t3 call t1 start");
+                    //t1.join();
+                    Thread.sleep(3000);
+                    synchronized (object) {
+                        object.wait();
+                    }
+                    System.out.println("t3 call t1 finish");
+                } catch (Exception w) {
+                    w.printStackTrace();
+                }
+            }
+        });
+        t3.setName("t3");
+        t3.start();
+        int a =0;
     }
 }
