@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 
 //简单的文本编辑器
@@ -16,6 +17,7 @@ import javax.swing.text.*;
 public class Editor extends JFrame {
     public JTextPane textPane = new JTextPane(); //文本窗格d，编辑窗口
     public JFileChooser filechooser = new JFileChooser(); //文件选择器
+    public JTable table = new JTable(); //table
 
     public Editor() {
         super("简记");
@@ -30,11 +32,13 @@ public class Editor extends JFrame {
                 new PasteAction(),
                 new AboutAction(),
                 new ExitAction(),
-                new HelpAction()
+                new HelpAction(),
+                new TableAction()
             };
         setJMenuBar(createJMenuBar(actions));        //根据actions创建菜单栏
         Container container = getContentPane();
         container.add(textPane, BorderLayout.CENTER);
+        container.add(table);
 
         setSize(1300, 1500);
         setVisible(true);
@@ -47,6 +51,7 @@ public class Editor extends JFrame {
         JMenu menuFile = new JMenu("文件(F)");
         JMenu menuEdit = new JMenu("编辑(E)");
         JMenu menuAbout = new JMenu("帮助(H)");
+        JMenu menuTable = new JMenu("表格(T)");
         menuFile.add(new JMenuItem(actions[0]));
         menuFile.add(new JMenuItem(actions[1]));
         menuFile.add(new JMenuItem(actions[2]));
@@ -56,9 +61,11 @@ public class Editor extends JFrame {
         menuEdit.add(new JMenuItem(actions[5]));
         menuAbout.add(new JMenuItem(actions[6]));
         menuAbout.add(new JMenuItem(actions[8]));
+        menuTable.add(new JMenuItem(actions[9]));
         menubar.add(menuFile);
         menubar.add(menuEdit);
         menubar.add(menuAbout);
+        menubar.add(menuTable);
         return menubar;
     }
 
@@ -184,6 +191,20 @@ public class Editor extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             JOptionPane.showMessageDialog(Editor.this, "xxx", "开发者邮箱", JOptionPane.PLAIN_MESSAGE);
+        }
+    }
+
+    class TableAction extends AbstractAction {
+        public TableAction() {
+            super("表格");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            table.setVisible(true);
+            JOptionPane.showMessageDialog(Editor.this, "表格", "表格", JOptionPane.PLAIN_MESSAGE);
+            table.addColumn(new TableColumn());
+            table.addColumn(new TableColumn());
         }
     }
 
